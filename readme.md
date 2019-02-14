@@ -1,5 +1,6 @@
 ## dnspod 自动更新解析脚本
 
+### 使用
 - 修改config.js
 
 >在 https://www.dnspod.cn/console/user/security 创建api token 并填入config.js 
