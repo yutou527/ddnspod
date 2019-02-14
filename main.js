@@ -2,55 +2,48 @@
 const http = require('https');
 const fetch = require('./fetch');
 const patten = /((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))/;
-const { ipUrl, tokenId, token } = require('./config')
+const { tokenId, token, domainId, recordId, dnspodApi } = require('./config')
 const loginToken = `${tokenId},${token}`;
-console.log(ipUrl, tokenId, token);
 
-getDomainsAsync();
 
-async function getDomainsAsync() {
-    var post_data = {
+async function ddns() {
+    var ipStr = await fetch.fetch('xyxy.tech', '/ip', null, "GET", null, 3001);
+    var ip = patten.exec(ipStr)[0];
+
+    console.log(ip);
+    var public_data = {
         login_token: loginToken,
         format: "json"
     }
-    let rst = await fetch.post('dnsapi.cn', '/Domain.List', post_data);
-    console.log('rst', rst);
-}
-function getDomains() {
-    var qs = require('querystring');
-
-    var post_data = {
-        login_token: `${tokenId},${token}`,
-        format: "json"
+    if (!domainId) {
+        console.warn(`need config "domainId" in config.js`);
+        let domainList = await fetch.fetch(dnspodApi, '/Domain.List', public_data, 'POST',"json");
+        console.log('here are your domains ');
+        console.dir(domainList.domains);
+        return;
+    }
+    if (!recordId) {
+        console.warn(`need config "recordId" in config.js`);
+        let recordList = await fetch.fetch(dnspodApi, '/Record.List', Object.assign({
+            domain_id: domainId,
+        }, public_data), "POST", 'json');
+        console.log('here are your records ');
+        console.dir(recordList.records);
+        return;
     }
 
-    var content = qs.stringify(post_data);
 
-    var options = {
-        hostname: 'dnsapi.cn',
-        port: 443,
-        path: '/Domain.List',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        }
-    };
-    console.log(content)
-    var req = http.request(options, function (res) {
-        console.log('STATUS: ' + res.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(res.headers));
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log('BODY: ' + chunk);
-        });
-    });
+    let result = await fetch.fetch(dnspodApi, '/Record.Modify', Object.assign({
+        domain_id: domainId,
+        record_id: recordId,
+        sub_domain: "ddns1",
+        record_type: "A",
+        record_line: "默认",
+        value: ip
 
-    req.on('error', function (e) {
-        console.log('problem with request: ' + e.message);
-    });
-
-    // write data to request body  
-    req.write(content);
-
-    req.end();
+    }, public_data), "POST", 'json');//https://dnsapi.cn/Record.List
+    console.log(result.status.message)
+    console.log(result.record)
 }
+
+ddns();

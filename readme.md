@@ -4,4 +4,7 @@
 
 ```bash
 node main.js
+
+#or
+npm run ddns
 ```
