@@ -1,14 +1,7 @@
-# dnspod 自动更新解析脚本
+## dnspod 自动更新解析脚本
 
+>修改config.js
 
-
-
-
-
-
-
-
-
-
-
-https://github.com/ohsc/dnspod-ddns
+```bash
+node main.js
+```
